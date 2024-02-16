@@ -1,0 +1,4 @@
+System shortcomings:
+I think the hardest part is needing to implement a middle where to check permission 
+based on RBAC mechanism, I haven't seen a request to implement it in draw.io. 
+In addition, the API has not mentioned password hashes

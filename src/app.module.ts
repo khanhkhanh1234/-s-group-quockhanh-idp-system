@@ -6,10 +6,10 @@ import { PermissionsModule } from './permissions/permissions.module';
 import { RolesModule } from './roles/roles.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthService } from './auth/auth.service';
-import { AuthController } from './auth/auth.controller';
+import { AuthModule } from './auth/auth.module';
 @Module({
   imports: [
+    AuthModule,
     UsersModule,
     PermissionsModule,
     RolesModule,
@@ -32,7 +32,7 @@ import { AuthController } from './auth/auth.controller';
       }),
     }),
   ],
-  controllers: [AppController, AuthController],
-  providers: [AppService, AuthService],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

@@ -1,11 +1,11 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { LoginCredentials, TokenDto } from './interface';
-import { LoginDto } from './dto/login.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import User from 'src/users/entities/user.entity';
-import { JwtService } from '@nestjs/jwt';
+import { LoginCredentials, TokenDto } from './interface/interface';
+import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcryptjs';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
@@ -16,20 +16,9 @@ export class AuthService {
   ) {}
   async login(loginDto: LoginDto): Promise<LoginCredentials> {
     const { username, password } = loginDto;
-    const user = await this.userRepository.findOne({
-      where: {
-        username: username,
-      },
-    });
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword) {
-      throw new UnauthorizedException('Invalid username or password');
-    }
-    const token = this.jwtService.sign({ id: user.id });
-    console.log(user.id, token);
+    const user = await this.validateUser(username, password);
+    const payload = { id: user.id };
+    const token = this.jwtService.sign(payload);
     const tokenDto: TokenDto = {
       type: 'Bearer',
       name: 'access_token',
@@ -39,5 +28,26 @@ export class AuthService {
       tokens: [tokenDto],
     };
     return loginCredentials;
+  }
+  // async login(user: any) {
+  //   const payload = { username: user.username, sub: user.userId };
+  //   return {
+  //     access_token: this.jwtService.sign(payload),
+  //   };
+  // }
+  async validateUser(username: string, pass: string): Promise<any> {
+    const user = await this.userRepository.findOne({
+      where: {
+        username: username,
+      },
+    });
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    const isValidPassword = await bcrypt.compare(pass, user.password);
+    if (!isValidPassword) {
+      throw new UnauthorizedException('Invalid username or password');
+    }
+    return user;
   }
 }

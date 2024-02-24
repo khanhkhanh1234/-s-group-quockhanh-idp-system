@@ -10,18 +10,17 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
-import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
   @Post()
-  @UseGuards(AuthGuard('jwt'))
   async createUser(@Body() createUserDto: CreateUserDto): Promise<User> {
     const newUser = await this.usersService.createUser(createUserDto);
     return newUser;
   }
-
+  @UseGuards(JwtAuthGuard)
   @Get()
   async getAllUsers(pageNumber, pageSize): Promise<User[]> {
     const users = await this.usersService.getAllUsers(pageNumber, pageSize);

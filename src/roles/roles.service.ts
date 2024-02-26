@@ -1,26 +1,70 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { Repository } from 'typeorm';
+import Permission from 'src/permissions/entities/permission.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import Role from './entities/role.entity';
+import { UpdatePermissionRoleDto } from './dto/update-permission-role.dto';
 
 @Injectable()
 export class RolesService {
-  create(createRoleDto: CreateRoleDto) {
-    return 'This action adds a new role';
+  constructor(
+    @InjectRepository(Role)
+    private roleRepository: Repository<Role>,
+    @InjectRepository(Permission)
+    private permissionRepository: Repository<Permission>,
+  ) {}
+  async create(createRoleDto: CreateRoleDto) {
+    return await this.roleRepository.insert(createRoleDto);
   }
 
-  findAll() {
-    return `This action returns all roles`;
+  async findAll() {
+    return await this.roleRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} role`;
+  async findOne(id: string) {
+    return await this.roleRepository.findOne({
+      where: {
+        id: id,
+      },
+    });
   }
 
-  update(id: number, updateRoleDto: UpdateRoleDto) {
-    return `This action updates a #${id} role`;
+  async update(id: string, updateRoleDto: UpdateRoleDto) {
+    return await this.roleRepository.update(id, updateRoleDto);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} role`;
+  async remove(id: string) {
+    return await this.roleRepository.delete(id);
+  }
+  async updatePermissions(
+    roleId: string,
+    updatePermissionDto: UpdatePermissionRoleDto,
+  ) {
+    const { permissionIds } = updatePermissionDto;
+    const role = await this.roleRepository.findOne({
+      where: {
+        id: roleId,
+      },
+      relations: ['permissions'],
+    });
+    if (role) {
+      const permissions: Permission[] = [];
+      for (const permissionId of permissionIds) {
+        const permission = await this.permissionRepository.findOne({
+          where: {
+            id: permissionId,
+          },
+        });
+        if (permission) {
+          permissions.push(permission);
+        }
+      }
+      role.permissions = permissions;
+      return await this.roleRepository.save(role);
+    } else {
+      return new NotFoundException(`Role with id ${roleId} not found`);
+    }
   }
 }

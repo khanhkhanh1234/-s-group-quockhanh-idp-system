@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Role } from '../roles/entities/role.entity';
 import * as bcrypt from 'bcryptjs';
+import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 @Injectable()
 export class UsersService {
   constructor(
@@ -28,7 +29,6 @@ export class UsersService {
           },
         });
         if (role) {
-          console.log(role);
           roles.push(role);
         }
       }
@@ -69,5 +69,31 @@ export class UsersService {
     }
     await this.userRepository.remove(user);
     return user;
+  }
+  async updateUserRole(userId: string, updateUserRoleDto: UpdateUserRoleDto) {
+    const { roleIds } = updateUserRoleDto;
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+      },
+      relations: ['roles'],
+    });
+    if (user) {
+      const roles: Role[] = [];
+      for (const roleId of roleIds) {
+        const role = await this.roleRepository.findOne({
+          where: {
+            id: roleId,
+          },
+        });
+        if (role) {
+          roles.push(role);
+        }
+      }
+      user.roles = roles;
+      return await this.userRepository.save(user);
+    } else {
+      return new NotFoundException(`User with id ${userId} not found`);
+    }
   }
 }

@@ -6,6 +6,8 @@ import { LoginCredentials, TokenDto } from './interface/interface';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
+import { PermissionsService } from 'src/permissions/permissions.service';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class AuthService {
@@ -13,11 +15,24 @@ export class AuthService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private jwtService: JwtService,
+    private permissionsService: PermissionsService,
+    private userService: UsersService,
   ) {}
   async login(loginDto: LoginDto): Promise<LoginCredentials> {
     const { username, password } = loginDto;
     const user = await this.validateUser(username, password);
-    const payload = { id: user.id };
+    console.log('user', user);
+    const roles = await this.userService.getRolesByUserId(user.id);
+    const userPermissions =
+      await this.permissionsService.getPermissionByRolesName(
+        roles.map((role) => role.name),
+      );
+    const payload = {
+      id: user.id,
+      username: user.username,
+      permissions: userPermissions,
+    };
+    console.log('payload', payload);
     const token = this.jwtService.sign(payload);
     const tokenDto: TokenDto = {
       type: 'Bearer',
@@ -29,12 +44,6 @@ export class AuthService {
     };
     return loginCredentials;
   }
-  // async login(user: any) {
-  //   const payload = { username: user.username, sub: user.userId };
-  //   return {
-  //     access_token: this.jwtService.sign(payload),
-  //   };
-  // }
   async validateUser(username: string, pass: string): Promise<any> {
     const user = await this.userRepository.findOne({
       where: {

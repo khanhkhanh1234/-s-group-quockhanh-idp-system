@@ -42,4 +42,8 @@ export class PermissionsController {
   remove(@Param('id') id: string) {
     return this.permissionsService.remove(id);
   }
+  @Get('roles/')
+  getPermissionByRolesName(roles: string[]) {
+    return this.permissionsService.getPermissionByRolesName(roles);
+  }
 }

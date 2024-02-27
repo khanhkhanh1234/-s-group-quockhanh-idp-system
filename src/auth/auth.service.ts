@@ -8,7 +8,8 @@ import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { PermissionsService } from 'src/permissions/permissions.service';
 import { UsersService } from 'src/users/users.service';
-
+import { ConfigService } from '@nestjs/config';
+import { CacheService } from 'src/cache/cache.service';
 @Injectable()
 export class AuthService {
   constructor(
@@ -17,27 +18,23 @@ export class AuthService {
     private jwtService: JwtService,
     private permissionsService: PermissionsService,
     private userService: UsersService,
+    private configService: ConfigService,
+    private cacheService: CacheService,
   ) {}
   async login(loginDto: LoginDto): Promise<LoginCredentials> {
     const { username, password } = loginDto;
     const user = await this.validateUser(username, password);
     console.log('user', user);
-    const roles = await this.userService.getRolesByUserId(user.id);
-    const userPermissions =
-      await this.permissionsService.getPermissionByRolesName(
-        roles.map((role) => role.name),
-      );
     const payload = {
       id: user.id,
-      username: user.username,
-      permissions: userPermissions,
     };
     console.log('payload', payload);
     const token = this.jwtService.sign(payload);
+    await this.cacheService.cacheUserRolesAndPermissions(token);
     const tokenDto: TokenDto = {
       type: 'Bearer',
       name: 'access_token',
-      value: token,
+      value: (await token).toString(),
     };
     const loginCredentials: LoginCredentials = {
       tokens: [tokenDto],

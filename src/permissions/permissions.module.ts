@@ -4,10 +4,14 @@ import { PermissionsController } from './permissions.controller';
 import Permission from './entities/permission.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import Role from 'src/roles/entities/role.entity';
+import { JwtService } from '@nestjs/jwt';
+import { CacheService } from 'src/cache/cache.service';
+import { UsersService } from 'src/users/users.service';
+import User from 'src/users/entities/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Permission, Role])],
+  imports: [TypeOrmModule.forFeature([Permission, Role, User])],
   controllers: [PermissionsController],
-  providers: [PermissionsService],
+  providers: [PermissionsService, JwtService, CacheService, UsersService],
 })
 export class PermissionsModule {}

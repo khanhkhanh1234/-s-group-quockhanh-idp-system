@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,6 +10,8 @@ import { Repository } from 'typeorm';
 import { Role } from '../roles/entities/role.entity';
 import * as bcrypt from 'bcryptjs';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 @Injectable()
 export class UsersService {
   constructor(
@@ -13,6 +19,8 @@ export class UsersService {
     private userRepository: Repository<User>,
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
+    private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
   async createUser(createUserDto: CreateUserDto): Promise<User> {
     const { roles: roleIds, ...userData } = createUserDto;
@@ -107,5 +115,15 @@ export class UsersService {
       return user.roles;
     }
     throw new NotFoundException(`User with id ${id} not found`);
+  }
+  async getUserIdFromToken(token: string): Promise<string> {
+    try {
+      const payload = await this.jwtService.verifyAsync(token, {
+        secret: this.configService.get<string>('JWT_SECRET'),
+      });
+      return payload.id;
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token');
+    }
   }
 }

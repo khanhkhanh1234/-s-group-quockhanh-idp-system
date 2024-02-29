@@ -51,11 +51,16 @@ export class RolesController {
     return this.rolesService.remove(id);
   }
   @UseGuards(GuardWithoutLibrary)
+  @SetMetadata('permissions', ['update:roles_permissiosns'])
   @Patch(':id/permissions')
   updatePermissions(
     @Param('id') id: string,
     @Body() updatePermissionDto: UpdatePermissionRoleDto,
   ) {
     return this.rolesService.updatePermissions(id, updatePermissionDto);
+  }
+  @Get(':id/get-roles')
+  getRoles(@Param('id') id: string) {
+    return this.rolesService.getRolesByUserId(id);
   }
 }

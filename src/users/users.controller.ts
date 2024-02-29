@@ -47,7 +47,8 @@ export class UsersController {
     const user = await this.usersService.deleteById(id);
     return user;
   }
-  @UseGuards(GuardWithoutLibrary)
+  @UseGuards(GuardWithoutLibrary, PermissionGuard)
+  @SetMetadata('permissions', ['update:users_roles'])
   @Patch(':id/roles')
   async updateUserRole(
     @Param('id') id: string,

@@ -5,16 +5,17 @@ import {
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { PermissionsService } from 'src/permissions/permissions.service';
-import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { RolesService } from 'src/roles/roles.service';
 
 @Injectable()
 export class CacheService {
   constructor(
     @Inject(CACHE_MANAGER)
-    private readonly cacheManager: Cache,
+    private readonly cacheManager,
     private readonly usersService: UsersService,
     private readonly permissionsService: PermissionsService,
+    private readonly roleService: RolesService,
   ) {}
 
   async cacheUserRolesAndPermissions(token: string) {
@@ -56,11 +57,25 @@ export class CacheService {
   }
 
   async getRolesByUserIdInCache(userId: string): Promise<any> {
+    const isRedisLive = await this.cacheManager.store.getClient().ping();
+    if (!isRedisLive) {
+      return this.roleService.getRolesByUserId(userId);
+    }
     const key = `user:${userId}:roles`;
     return this.cacheManager.get(key);
   }
 
   async getPermissionsByUserIdInCache(userId: string): Promise<any> {
+    const isRedisLive = await this.cacheManager.store.getClient().ping();
+    console.log('isRedisLive:', isRedisLive);
+    if (!isRedisLive) {
+      const roles = await this.roleService.getRolesByUserId(userId);
+      const permissions =
+        await this.permissionsService.getPermissionByRolesName(
+          roles.map((role) => role.name),
+        );
+      return permissions;
+    }
     const key = `user:${userId}:permissions`;
     return this.cacheManager.get(key);
   }

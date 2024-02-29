@@ -18,6 +18,11 @@ export class PermissionGuard implements CanActivate {
     console.log('userId', userId);
     const userPermissions =
       await this.cacheService.getPermissionsByUserIdInCache(userId);
+    if (!userPermissions) {
+      throw new ForbiddenException(
+        'You do not have permission to access this resource',
+      );
+    }
     const requiredPermissions =
       this.reflector.get<string[]>('permissions', context.getHandler()) || [];
     console.log('requiredPermissions', requiredPermissions);

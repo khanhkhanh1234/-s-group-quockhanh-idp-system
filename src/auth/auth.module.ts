@@ -14,6 +14,7 @@ import { ConfigService } from '@nestjs/config';
 import { CacheService } from 'src/cache/cache.service';
 import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-store';
+import { RolesService } from 'src/roles/roles.service';
 @Module({
   imports: [
     CacheModule.register({
@@ -38,7 +39,7 @@ import * as redisStore from 'cache-manager-redis-store';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, PermissionsService, CacheService],
+  providers: [AuthService, PermissionsService, CacheService, RolesService],
   exports: [AuthService],
 })
 export class AuthModule {}

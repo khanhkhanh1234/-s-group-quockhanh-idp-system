@@ -40,14 +40,6 @@ export class CacheService {
       console.log(
         `Cached roles and permissions for user ${userId} successfully`,
       );
-
-      // Get cached data
-      const cachedRoles = await this.getRolesByUserIdInCache(userId);
-      const cachedPermissions =
-        await this.getPermissionsByUserIdInCache(userId);
-
-      console.log(`Cached roles for user ${userId}:`, cachedRoles);
-      console.log(`Cached permissions for user ${userId}:`, cachedPermissions);
     } catch (error) {
       console.error('Error caching user roles and permissions:', error);
       throw new InternalServerErrorException(
@@ -57,7 +49,7 @@ export class CacheService {
   }
 
   async getRolesByUserIdInCache(userId: string): Promise<any> {
-    const isRedisLive = await this.cacheManager.store.getClient().ping();
+    const isRedisLive = await this.isRedisLive();
     if (!isRedisLive) {
       return this.roleService.getRolesByUserId(userId);
     }
@@ -66,7 +58,7 @@ export class CacheService {
   }
 
   async getPermissionsByUserIdInCache(userId: string): Promise<any> {
-    const isRedisLive = await this.cacheManager.store.getClient().ping();
+    const isRedisLive = await this.isRedisLive();
     console.log('isRedisLive:', isRedisLive);
     if (!isRedisLive) {
       const roles = await this.roleService.getRolesByUserId(userId);
@@ -78,5 +70,8 @@ export class CacheService {
     }
     const key = `user:${userId}:permissions`;
     return this.cacheManager.get(key);
+  }
+  isRedisLive() {
+    return this.cacheManager.store.getClient().ping();
   }
 }

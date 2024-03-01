@@ -6,9 +6,6 @@ import { LoginCredentials, TokenDto } from './interface/interface';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
-import { PermissionsService } from 'src/permissions/permissions.service';
-import { UsersService } from 'src/users/users.service';
-import { ConfigService } from '@nestjs/config';
 import { CacheService } from 'src/cache/cache.service';
 @Injectable()
 export class AuthService {
@@ -16,9 +13,6 @@ export class AuthService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private jwtService: JwtService,
-    private permissionsService: PermissionsService,
-    private userService: UsersService,
-    private configService: ConfigService,
     private cacheService: CacheService,
   ) {}
   async login(loginDto: LoginDto): Promise<LoginCredentials> {
@@ -30,7 +24,12 @@ export class AuthService {
     };
     console.log('payload', payload);
     const token = this.jwtService.sign(payload);
-    await this.cacheService.cacheUserRolesAndPermissions(token);
+    const isRedisLive = this.cacheService.isRedisLive();
+    console.log('isRedisLive', isRedisLive);
+    if (isRedisLive) {
+      console.log("Cache is not live", !isRedisLive)
+      await this.cacheService.cacheUserRolesAndPermissions(token);
+    }
     const tokenDto: TokenDto = {
       type: 'Bearer',
       name: 'access_token',

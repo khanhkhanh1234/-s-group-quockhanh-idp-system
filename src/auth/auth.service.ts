@@ -18,16 +18,12 @@ export class AuthService {
   async login(loginDto: LoginDto): Promise<LoginCredentials> {
     const { username, password } = loginDto;
     const user = await this.validateUser(username, password);
-    console.log('user', user);
     const payload = {
       id: user.id,
     };
-    console.log('payload', payload);
     const token = this.jwtService.sign(payload);
     const isRedisLive = this.cacheService.isRedisLive();
-    console.log('isRedisLive', isRedisLive);
     if (isRedisLive) {
-      console.log("Cache is not live", !isRedisLive)
       await this.cacheService.cacheUserRolesAndPermissions(token);
     }
     const tokenDto: TokenDto = {

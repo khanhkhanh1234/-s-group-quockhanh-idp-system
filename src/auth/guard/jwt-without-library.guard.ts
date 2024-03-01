@@ -32,7 +32,6 @@ export class GuardWithoutLibrary implements CanActivate {
     } catch {
       throw new UnauthorizedException();
     }
-    console.log('payload', payload);
     return payload;
   }
 

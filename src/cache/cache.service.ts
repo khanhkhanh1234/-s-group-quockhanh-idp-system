@@ -36,10 +36,6 @@ export class CacheService {
         `user:${userId}:permissions`,
         JSON.stringify(permissions),
       );
-
-      console.log(
-        `Cached roles and permissions for user ${userId} successfully`,
-      );
     } catch (error) {
       console.error('Error caching user roles and permissions:', error);
       throw new InternalServerErrorException(
@@ -59,7 +55,6 @@ export class CacheService {
 
   async getPermissionsByUserIdInCache(userId: string): Promise<any> {
     const isRedisLive = await this.isRedisLive();
-    console.log('isRedisLive:', isRedisLive);
     if (!isRedisLive) {
       const roles = await this.roleService.getRolesByUserId(userId);
       const permissions =

@@ -36,7 +36,7 @@ export class UsersController {
   @UseGuards(GuardWithoutLibrary, PermissionGuard)
   @SetMetadata('permissions', ['read:user'])
   @Get(':id')
-  async getUserById(@Param('id') id: string): Promise<User> {
+  async getUserById(@Param('id') id: string): Promise<any> {
     const user = await this.usersService.getUserById(id);
     return user;
   }
@@ -55,5 +55,9 @@ export class UsersController {
     @Body() updateUserRoleDto: UpdateUserRoleDto,
   ) {
     return await this.usersService.updateUserRole(id, updateUserRoleDto);
+  }
+  @Post('seed')
+  async seedUsers(): Promise<void> {
+    await this.usersService.seedUsers();
   }
 }

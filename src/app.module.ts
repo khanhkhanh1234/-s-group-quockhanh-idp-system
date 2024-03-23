@@ -8,6 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { SeedModule } from './seed/seed.module';
 @Module({
   imports: [
     AuthModule,
@@ -32,6 +33,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
         logging: true,
       }),
     }),
+    SeedModule,
   ],
   controllers: [AppController],
   providers: [AppService],

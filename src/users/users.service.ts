@@ -45,12 +45,15 @@ export class UsersService {
     return this.userRepository.save(user);
   }
 
-  async getAllUsers(pageSize: number = 10, pageNumber: number = 1) {
+  async getAllUsers(pageSize: number = 2000, pageNumber: number = 1) {
     const offset = (pageNumber - 1) * pageSize;
-    const users = await this.userRepository.find({
-      take: pageSize,
-      skip: offset,
-    });
+    const users = await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.username != :username', { username: 'headadmin' })
+      .take(pageSize)
+      .skip(offset)
+      .getMany();
+
     return users;
   }
 
@@ -61,7 +64,8 @@ export class UsersService {
       },
     });
     if (user) {
-      return user;
+      const { password, ...userWithoutPassword } = user;
+      return userWithoutPassword;
     }
     throw new NotFoundException(`User with id ${id} not found`);
   }
@@ -124,6 +128,26 @@ export class UsersService {
       return payload.id;
     } catch (error) {
       throw new UnauthorizedException('Invalid token');
+    }
+  }
+  async seedUsers(): Promise<void> {
+    const usersToCreate = 1000;
+    const currentDate = new Date();
+    for (let i = 0; i < usersToCreate; i++) {
+      const randomDate = new Date(
+        currentDate.getTime() - Math.random() * 1000 * 3600 * 24 * 365,
+      ); // Random date within the past year
+      const user: CreateUserDto = {
+        username: `user_${i}`,
+        fullName: `User ${i} Full Name`,
+        password: `password`,
+        email: `user${i}@example.com`,
+        age: Math.floor(Math.random() * 70) + 18, // Random age between 18 and 87
+        updatedAt: randomDate,
+        roles: [4], // Default role
+      };
+      console.log(user);
+      await this.createUser(user);
     }
   }
 }

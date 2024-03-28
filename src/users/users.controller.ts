@@ -36,7 +36,7 @@ export class UsersController {
   async getAllUsers(
     @Query() paginationDto: PaginationDto,
     @Query() filterDto: FilterDto,
-  ): Promise<User[]> {
+  ): Promise<any> {
     const users = await this.usersService.getAllUsers(paginationDto, filterDto);
     return users;
   }

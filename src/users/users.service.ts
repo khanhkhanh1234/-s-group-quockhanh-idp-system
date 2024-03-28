@@ -15,7 +15,6 @@ import { JwtService } from '@nestjs/jwt';
 import { RolesService } from 'src/roles/roles.service';
 import { PaginationDto } from './dto/pagination.dto';
 import { FilterDto } from './dto/filter.dto';
-import { query } from 'express';
 @Injectable()
 export class UsersService {
   constructor(
@@ -81,10 +80,13 @@ export class UsersService {
         toDate,
       });
     }
-
+    usersQuery.leftJoinAndSelect('user.roles', 'roles');
     const result = await usersQuery.take(pageSize).skip(offset).getMany();
-
-    return result;
+    const res = [];
+    for (const user of result) {
+      res.push({ ...user, roles: user.roles.map((role) => role.name) });
+    }
+    return res;
   }
 
   async getUserById(id: string) {
@@ -104,7 +106,6 @@ export class UsersService {
     const bearerToken = req.headers.authorization;
     const token = bearerToken.split(' ')[1];
     const userId = await this.getUserIdFromToken(token);
-    console.log(userId);
     const user = await this.getUserById(userId);
     const roles = await this.getRolesByUserId(userId);
     return { user, roles };
